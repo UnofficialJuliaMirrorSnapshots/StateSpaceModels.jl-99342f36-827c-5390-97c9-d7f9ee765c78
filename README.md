@@ -2,7 +2,7 @@
 
 | **DOI** | **Build Status** | **Coverage** | **Documentation** |
 |:-----------------:|:-----------------:|:-----------------:|:-----------------:|
-| [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1240453.svg)](https://doi.org/10.5281/zenodo.1240453) | [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://lampspuc.github.io/StateSpaceModels.jl/latest/)
+| [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2598488.svg)](https://doi.org/10.5281/zenodo.2598488) | [![Build Status][build-img]][build-url] | [![Codecov branch][codecov-img]][codecov-url] |[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://lampspuc.github.io/StateSpaceModels.jl/latest/)
 
 ## Installation
 
@@ -35,12 +35,8 @@ Current features:
 
 Future features (work in progress):
 * User-defined model
-* Cycles
 * Forecasting and confidence intervals
 * Completion of missing values
-* Different models for each variable in multivariate case
-* Structural break
-* Exact initialization
 
 [build-img]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl.svg?branch=master
 [build-url]: https://travis-ci.org/LAMPSPUC/StateSpaceModels.jl
