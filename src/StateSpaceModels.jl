@@ -1,10 +1,10 @@
 module StateSpaceModels
 
-using Optim, Distributions, LinearAlgebra
+using Optim, Distributions, LinearAlgebra, StaticArrays
 
 import Base: size
 
-export statespace, simulate, structuralmodel
+export statespace
 
 include("structures.jl")
 include("utils.jl")
@@ -24,8 +24,8 @@ function statespace(model::StateSpaceModel; nseeds::Int = 3)
     @info("Starting filtering and smoothing...")
 
     # Kalman filter and smoothing
-    kfilter = sqrt_kalmanfilter(model, param.sqrtH, param.sqrtQ)
-    smoothedstate = sqrt_smoother(model, kfilter)
+    kfilter, U2star, K = sqrt_kalmanfilter(model, param.sqrtH, param.sqrtQ)
+    smoothedstate = sqrt_smoother(model, kfilter, U2star, K)
 
     @info("Filtering and smoothing completed.")
 
