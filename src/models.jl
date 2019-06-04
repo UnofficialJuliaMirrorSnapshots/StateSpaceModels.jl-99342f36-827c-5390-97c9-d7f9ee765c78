@@ -1,4 +1,4 @@
-export structuralmodel, locallevelmodel
+export structuralmodel, locallevelmodel, lineartrendmodel
 
 """
     structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Float64}(undef, 0, 0)) where Typ <: AbstractFloat
@@ -21,8 +21,6 @@ function structuralmodel(y::VecOrMat{Typ}, s::Int; X::VecOrMat{Typ} = Matrix{Flo
     if p_exp > 0 && n_exp < n
         error("Number of observations in X must be greater than or equal to the number of observations in y.")
     end
-
-    @info("Creating structural model with $p endogenous variables and $p_exp exogenous variables.")
 
     m = (1 + s + p_exp)*p
     r = 3*p
@@ -103,8 +101,6 @@ function locallevelmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
     y = y[:, :]
     n, p = size(y)
 
-    @info("Creating local level model with $p endogenous variables.")
-
     m = p
     r = p
 
@@ -114,6 +110,35 @@ function locallevelmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
     # State equation
     T = Matrix{Float64}(I, p, p)
     R = Matrix{Float64}(I, p, p)
+
+    dim = StateSpaceDimensions(n, p, m, r)
+    model = StateSpaceModel(y, Z, T, R, dim, "time-invariant")
+
+    return model
+end
+
+"""
+    lineartrendmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
+
+Build state-space system for a linear trend model with observations y.
+
+If `y` is proided as an `Array{Typ, 1}` it will be converted to an `Array{Typ, 2}` inside the `StateSpaceModel`.
+"""
+function lineartrendmodel(y::VecOrMat{Typ}) where Typ <: AbstractFloat
+
+    # Number of observations and endogenous variables
+    y = y[:, :]
+    n, p = size(y)
+
+    m = 2*p
+    r = 2*p
+
+    # Observation equation
+    Z = kron(Matrix{Float64}(I, p, p),[1 0])
+
+    # State equation
+    T = kron(Matrix{Float64}(I, p, p),[1 1; 0 1])
+    R = kron(Matrix{Float64}(I, p, p),[1 0; 0 1])
 
     dim = StateSpaceDimensions(n, p, m, r)
     model = StateSpaceModel(y, Z, T, R, dim, "time-invariant")
