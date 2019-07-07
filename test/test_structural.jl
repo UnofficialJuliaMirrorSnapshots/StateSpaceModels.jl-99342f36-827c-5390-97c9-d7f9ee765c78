@@ -1,19 +1,19 @@
-# Tests
-@testset "Strutural model tests" begin
+@testset "Structural model tests" begin
     @testset "Constant signal with basic structural model" begin
         y = ones(30)
         model = structural(y, 2)
 
         @test isa(model, StateSpaceModel)
         @test model.mode == "time-invariant"
-        @test model.filter_type == KalmanFilter
-
+        
         ss = statespace(model)
-
+        
+        @test ss.filter_type == KalmanFilter
         @test isa(ss, StateSpace)
 
         @test all(ss.covariance.H .< 1e-6)
         @test all(ss.covariance.Q .< 1e-6)
+        compare_forecast_simulation(ss, 20, 1000, 1e-3)
     end
 
     @testset "Constant signal with exogenous variables" begin
@@ -24,17 +24,15 @@
 
         @test isa(model, StateSpaceModel)
         @test model.mode == "time-variant"
-        @test model.filter_type == KalmanFilter
 
         ss = statespace(model)
 
+        @test ss.filter_type == KalmanFilter
         @test isa(ss, StateSpace)
         @test all(ss.covariance.H .< 1e-6)
         @test all(ss.covariance.Q .< 1e-6)
 
-        sim = simulate(ss, 10, 1000)
-        pred = mean(sim[1, :, :], dims = 2)
-        @test all(abs.(pred .- ones(10)) .< 1e-3)
+        compare_forecast_simulation(ss, 10, 1000, 1e-3)
     end
 
     @testset "Multivariate test" begin
@@ -44,13 +42,14 @@
 
         @test isa(model, StateSpaceModel)
         @test model.mode == "time-invariant"
-        @test model.filter_type == KalmanFilter
 
         ss = statespace(model)
         sim  = simulate(ss, 10, 1000)
 
-        @test mean(sim, dims = 3)[1, :] ≈ ones(10) rtol = 1e-3
-        @test mean(sim, dims = 3)[2, :] ≈ collect(21:30) rtol = 1e-3
+        @test ss.filter_type == KalmanFilter
+        @test mean(sim, dims = 3)[:, 1] ≈ ones(10) rtol = 1e-3
+        @test mean(sim, dims = 3)[:, 2] ≈ collect(21:30) rtol = 1e-3
+        compare_forecast_simulation(ss, 20, 1000, 1e-3)
     end
 
     @testset "Error tests" begin

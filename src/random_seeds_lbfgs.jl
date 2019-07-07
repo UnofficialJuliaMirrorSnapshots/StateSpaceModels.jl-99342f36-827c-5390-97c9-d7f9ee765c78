@@ -1,4 +1,4 @@
-function estimate_statespace(model::StateSpaceModel, 
+function estimate_statespace(model::StateSpaceModel, filter_type::DataType,
                              opt_method::RandomSeedsLBFGS; verbose::Int = 1)
 
     nseeds = opt_method.nseeds                         
@@ -16,9 +16,7 @@ function estimate_statespace(model::StateSpaceModel,
     # Avoiding zero values for covariance
     deleteat!(seedrange, findall(iszero, seedrange))
 
-    if verbose > 0
-     @info("Initiating maximum likelihood estimation with $(nseeds-1) seeds.")
-    end
+    print_estimation_start(verbose, nseeds)
 
     # Generate initial values in [-1e3, 1e3]
     for iseed = 1:nseeds
@@ -29,16 +27,11 @@ function estimate_statespace(model::StateSpaceModel,
         end
     end
 
+    t0 = now()
+
     # Optimization
     for iseed = 1:nseeds
-        if verbose > 0
-            @info("Optimizing likelihood for seed $(iseed-1) of $(nseeds-1)...")
-            if iseed == 1
-                @info("Seed 0 is aimed at degenerate cases.")
-            end
-        end
-
-        optseed = optimize(psitilde -> statespace_likelihood(psitilde, model), seeds[:, iseed],
+        optseed = optimize(psitilde -> statespace_likelihood(psitilde, model, filter_type), seeds[:, iseed],
                             LBFGS(), Optim.Options(f_tol = opt_method.f_tol, 
                                                    g_tol = opt_method.g_tol, 
                                                    iterations = opt_method.iterations,
@@ -46,21 +39,16 @@ function estimate_statespace(model::StateSpaceModel,
         loglikelihood[iseed] = -optseed.minimum
         psi[:, iseed] = optseed.minimizer
 
-        if verbose > 0
-            @info("Log-likelihood for seed $(iseed-1): $(loglikelihood[iseed])")
-        end
+        print_loglikelihood(verbose, iseed, loglikelihood, t0)
     end
 
-    if verbose > 0
-        @info("Maximum likelihood estimation complete.")
-        @info("Log-likelihood: $(maximum(loglikelihood))")
-    end
+    print_estimation_end(verbose, loglikelihood)
 
     # Put seeds in the model struct
-    model.optimization_method.seeds = seeds
+    opt_method.seeds = seeds
 
     bestpsi = psi[:, argmax(loglikelihood)]
-    H, Q    = statespace_covariance(bestpsi, model.dim.p, model.dim.r, model.filter_type)
+    H, Q    = statespace_covariance(bestpsi, model.dim.p, model.dim.r, filter_type)
 
-    return StateSpaceCovariance(H, Q, model.filter_type)
+    return StateSpaceCovariance(H, Q, filter_type)
 end

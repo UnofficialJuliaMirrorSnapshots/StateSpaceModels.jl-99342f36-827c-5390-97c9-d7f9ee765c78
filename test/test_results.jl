@@ -1,35 +1,33 @@
-# Here we should put tests that obtained the same results in other softwares
-
 @testset "Air passengers with Kalman filter" begin
 
-    AP = CSV.read("../example/AirPassengers.csv")
+    AP = CSV.read("../examples/AirPassengers.csv")
     logAP = log.(Vector{Float64}(AP[:Passengers]))
 
     model = structural(logAP, 12)
 
-    @test isa(model, StateSpaceModels.StateSpaceModel)
+    @test isa(model, StateSpaceModel)
     @test model.mode == "time-invariant"
-    @test model.filter_type == KalmanFilter
-
+    
     ss = statespace(model)
-
-    @test isa(ss, StateSpaceModels.StateSpace)
-    # We should test what is the covariance it returns
+    
+    @test ss.filter_type == KalmanFilter
+    @test isa(ss, StateSpace)
+    compare_forecast_simulation(ss, 20, 1000, 1e-2)
 end
 
 @testset "Air passengers with square-root Kalman filter" begin
 
-    AP = CSV.read("../example/AirPassengers.csv")
+    AP = CSV.read("../examples/AirPassengers.csv")
     logAP = log.(Vector{Float64}(AP[:Passengers]))
 
-    model = structural(logAP, 12; filter_type = SquareRootFilter)
+    model = structural(logAP, 12)
 
-    @test isa(model, StateSpaceModels.StateSpaceModel)
+    @test isa(model, StateSpaceModel)
     @test model.mode == "time-invariant"
-    @test model.filter_type == SquareRootFilter
-
-    ss = statespace(model)
-
-    @test isa(ss, StateSpaceModels.StateSpace)
-    # We should test what is the covariance it returns
+    
+    ss = statespace(model; filter_type = SquareRootFilter)
+    
+    @test ss.filter_type == SquareRootFilter
+    @test isa(ss, StateSpace)
+    compare_forecast_simulation(ss, 20, 1000, 1e-2)
 end

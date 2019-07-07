@@ -6,10 +6,12 @@ makedocs(
     clean    = true,
     format   = Documenter.HTML(),
     sitename = "StateSpaceModels.jl",
-    authors = "Raphael Saavedra, Mario Souto and Guilherme Bodin.",
+    authors = "Raphael Saavedra, Guilherme Bodin, and Mario Souto",
     pages = [
         "Home" => "index.md",
-        "manual.md"
+        "manual.md",
+        "examples.md",
+        "reference.md"
     ]
 )
 
