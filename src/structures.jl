@@ -31,8 +31,10 @@ end
 # Auxiliary structure for Kalman filter
 mutable struct KalmanFilter <: AbstractFilter
     a::Matrix{Float64} # predictive state
+    att::Matrix{Float64}
     v::Matrix{Float64} # innovations
     P::Array{Float64, 3} # covariance matrix of the predictive state
+    Ptt::Array{Float64, 3}
     F::Array{Float64, 3} # covariance matrix of the innovations
     steadystate::Bool # flag that indicates if steady state was attained
     tsteady::Int # instant when steady state was attained; in case it wasn't, tsteady = n+1
@@ -101,6 +103,7 @@ struct StateSpaceModel
     T::Matrix{Float64} # state matrix
     R::Matrix{Float64} # state error matrix
     dim::StateSpaceDimensions
+    missing_observations::Vector{Int}
     mode::String
 
     function StateSpaceModel(y::Matrix{Float64}, Z::Array{Float64, 3}, T::Matrix{Float64}, R::Matrix{Float64})
@@ -114,7 +117,7 @@ struct StateSpaceModel
             error("StateSpaceModel dimension mismatch")
         end
         dim = StateSpaceDimensions(ny, py, mr, rr)
-        new(y, Z, T, R, dim, "time-variant")
+        new(y, Z, T, R, dim, find_missing_observations(y), "time-variant")
     end
 
     function StateSpaceModel(y::Matrix{Float64}, Z::Matrix{Float64}, T::Matrix{Float64}, R::Matrix{Float64})
@@ -131,10 +134,10 @@ struct StateSpaceModel
 
         # Build Z
         Zvar = Array{Float64, 3}(undef, pz, mz, ny)
-        for t = 1:ny
-            Zvar[:, :, t] = Z
+        for t in 1:ny, i in axes(Z, 1), j in axes(Z, 2)
+            Zvar[i, j, t] = Z[i, j] # Zvar[:, :, t] = Z
         end
-        new(y, Zvar, T, R, dim, "time-invariant")
+        new(y, Zvar, T, R, dim, find_missing_observations(y), "time-invariant")
     end
 end
 

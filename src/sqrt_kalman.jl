@@ -5,6 +5,8 @@ Square-root Kalman filter with big Kappa initialization.
 """
 function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::Matrix{Typ}; tol::Typ = 1e-5) where Typ <: AbstractFloat
 
+    time_invariant = model.mode == "time-invariant"
+
     # Load dimensions
     n, p, m, r = size(model)
 
@@ -42,9 +44,10 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
     sqrtH_zeros_pr  = [sqrtH zeros_pr]
     zeros_mp_RsqrtQ = [zeros_mp R*sqrtQ]
 
+    !isempty(model.missing_observations) && error("Treatment of missing values not implemented for SquareRootFilter, please use KalmanFilter.")
+
     # Square-root Kalman filter
     for t = 1:n
-        any(isnan.(y[t, :])) && error("Treatment of missing values not implemented for SquareRootFilter, please use KalmanFilter.")
         v[t, :] = y[t, :] - Z[:, :, t]*a[t, :]
         if steadystate
             sqrtF[:, :, t] = sqrtF[:, :, t-1]
@@ -66,7 +69,7 @@ function sqrt_kalman_filter(model::StateSpaceModel, sqrtH::Matrix{Typ}, sqrtQ::M
             sqrtP[:, :, t+1] = Ustar[range1, range1]
 
             # Checking if steady state was attained
-            if check_steady_state(sqrtP[:, :, t+1], sqrtP[:, :, t], tol)
+            if time_invariant && check_steady_state(sqrtP, t, tol)
                 steadystate = true
                 tsteady     = t
             end
@@ -103,7 +106,8 @@ function filtered_state(model::StateSpaceModel, sqrt_filter::SquareRootFilter)
     for t = 1:n
         PZF = P[:, :, t] * Z[:, :, t]' * inv(F[:, :, t])
         att[t, :]    = a[t, :] + PZF * v[t, :]
-        Ptt[:, :, t] = ensure_pos_sym(P[:, :, t] - PZF * Z[:, :, t] * P[:, :, t])
+        Ptt[:, :, t] = P[:, :, t] - PZF * Z[:, :, t] * P[:, :, t]
+        ensure_pos_sym!(Ptt, t)
     end
 
     return att, Ptt
