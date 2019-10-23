@@ -1,9 +1,9 @@
 """
-    diagnostics(ss::StateSpace)
+    diagnostics(ss::StateSpace{T}) where T
 
 Run diagnostics and print results
 """
-function diagnostics(ss::StateSpace)
+function diagnostics(ss::StateSpace{T}) where T
     println("==============================================================")
     println("                    Running diagnostics...                    ")
     
@@ -29,11 +29,11 @@ function diagnostics(ss::StateSpace)
 end
 
 """
-    residuals(ss::StateSpace)
+    residuals(ss::StateSpace{T}) where T
 
 Obtain standardized residuals from a state-space model
 """
-function residuals(ss::StateSpace{T}) where T <: AbstractFloat
+function residuals(ss::StateSpace{T}) where T
     e = Matrix{T}(undef, ss.model.dim.n, ss.model.dim.p)
     for j = 1:ss.model.dim.p
         for t = 1:ss.model.dim.n
@@ -48,11 +48,11 @@ function residuals(ss::StateSpace{T}) where T <: AbstractFloat
 end
 
 """
-    jarquebera(e::Matrix{T})
+    jarquebera(e::Matrix{T}) where T
 
 Run Jarque-Bera normality test and return p-values
 """
-function jarquebera(e::Matrix{T}) where T <: AbstractFloat
+function jarquebera(e::Matrix{T}) where T
     n, p = size(e)
     pvalue = Vector{T}(undef, p)
     for j = 1:p
@@ -70,11 +70,11 @@ function jarquebera(e::Matrix{T}) where T <: AbstractFloat
 end
 
 """
-    ljungbox(e::Matrix{T}; maxlag = 20)
+    ljungbox(e::Matrix{T}; maxlag::Int = 20) where T
 
 Run Ljung-Box independence test and return p-values
 """
-function ljungbox(e::Matrix{T}; maxlag::Int = 20) where T <: AbstractFloat
+function ljungbox(e::Matrix{T}; maxlag::Int = 20) where T
     n, p = size(e)
     n <= maxlag && (maxlag = n-1)
     pvalue = Vector{T}(undef, p)
@@ -89,11 +89,11 @@ function ljungbox(e::Matrix{T}; maxlag::Int = 20) where T <: AbstractFloat
 end
 
 """
-    homoscedast(e::Matrix{T})
+    homoscedast(e::Matrix{T}) where T
 
 Run homoscedasticity test and return p-values
 """
-function homoscedast(e::Matrix{T}) where T <: AbstractFloat
+function homoscedast(e::Matrix{T}) where T
     n, p = size(e)
     t1 = floor(Int, n/3)
     t2 = ceil(Int, 2*(n/3)+1)
