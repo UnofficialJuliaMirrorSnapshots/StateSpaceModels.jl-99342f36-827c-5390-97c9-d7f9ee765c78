@@ -7,8 +7,8 @@ In this package we consider the following state-space model
 ```math
 \begin{gather*}
     \begin{aligned}
-        y_{t} &= Z_{t} \alpha_{t}  + \varepsilon_{t}, \quad \quad \quad t = 1 \dots n, \\
-        \alpha_{t+1} &= T \alpha_{t} + R \eta_{t},
+        y_{t} &= Z_{t} \alpha_{t} + d_{t} + \varepsilon_{t}, \quad \quad \quad t = 1 \dots n, \\
+        \alpha_{t+1} &= T \alpha_{t} + c_{t} + R \eta_{t},
     \end{aligned}
 \end{gather*}
 ```
@@ -41,13 +41,15 @@ NID
 ```@docs
 StateSpaceDimensions
 StateSpaceModel
-StateSpaceCovariance
 SmoothedState
 FilterOutput
 StateSpace
 ```
 
 ## Predefined models
+
+The package provides constructors for some classic state-space models.
+
 The local level model is defined by
 
 ```math
@@ -96,6 +98,22 @@ The structural model is defined by
 ```@docs
 structural
 ```
+
+## Custom models
+
+You can also build your own custom model by passing all or some of the matrices that compose the state-space model.
+
+Currently there is a list of constructors that allow you to define a new model. When building the `StateSpaceModel` the parameters
+to be estimated will be indicated with a `NaN`.
+
+```julia
+ StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+ StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}, H::Matrix{Typ}, Q::Matrix{Typ}) where Typ <: Real
+ StateSpaceModel(y::Matrix{Typ}, Z::Array{Typ, 3}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+ StateSpaceModel(y::Matrix{Typ}, Z::Matrix{Typ}, T::Matrix{Typ}, R::Matrix{Typ}) where Typ <: Real
+```
+
+In case `H` and `Q` are not provided, they are automatically filled with `NaN` and set to be estimated.
 
 ## Estimation
 The model estimation is made using the function `statespace(model; filter_type = KalmanFilter, optimization_method = RandomSeedsLBFGS(), verbose = 1)`. It receives as argument the pre-specified `StateSpaceModel` object `model`. Optionally, the user can define the Kalman filter variant to be used, the optimization method and the verbosity level.
